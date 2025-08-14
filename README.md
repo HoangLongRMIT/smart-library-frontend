@@ -1,6 +1,6 @@
 # Smart Library Frontend
 
-A React + Tailwind CSS frontend for the **Smart Library** project.  
+A React frontend for the **Smart Library** project.  
 Runs on **Vite** with **Flux architecture** for state management.  
 Configured to run locally on **http://localhost:3001**.
 
@@ -9,7 +9,6 @@ Configured to run locally on **http://localhost:3001**.
 ## Tech Stack
 - **React 18**
 - **Vite 5**
-- **Tailwind CSS v4** with new `@tailwindcss/postcss` plugin
 - **Flux** (custom minimal implementation)
 - **Node.js** v20.9+ (tested)
 
