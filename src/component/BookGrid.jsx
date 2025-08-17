@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import BookCard from "./BookCard";
 import BookDetailDrawer from "./BookDetailDrawer";
 
-export default function BookGrid({ books = [] }) {
+export default function BookGrid({
+  books = [],
+  showActions = false,
+  onReturn,
+  onReview,
+}) {
   const [selectedBook, setSelectedBook] = useState(null);
 
   useEffect(() => {
@@ -23,15 +28,30 @@ export default function BookGrid({ books = [] }) {
           alignItems: "stretch",
         }}
       >
-        {books.map((b) => (
-          <div
-            key={b.book_id ?? b.id ?? b.ISBN}
-            style={{ cursor: "pointer" }}
-            onClick={() => setSelectedBook(b)}
-          >
-            <BookCard book={b} />
-          </div>
-        ))}
+        {books.map((b) => {
+          const clickable = !showActions; // avoid accidental drawer open in MyLibrary
+          const Wrapper = ({ children }) =>
+            clickable ? (
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() => setSelectedBook(b)}
+              >
+                {children}
+              </div>
+            ) : (
+              <div>{children}</div>
+            );
+          return (
+            <Wrapper key={b.book_id ?? b.id ?? b.ISBN}>
+              <BookCard
+                book={b}
+                showActions={showActions}
+                onReturn={onReturn}
+                onReview={onReview}
+              />
+            </Wrapper>
+          );
+        })}
       </div>
 
       {selectedBook && (

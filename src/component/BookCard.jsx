@@ -1,9 +1,24 @@
 import React from "react";
 
-export default function BookCard({ book }) {
+export default function BookCard({
+  book,
+  showActions = false,
+  onReturn,
+  onReview,
+}) {
   const IMAGE_H = 280;
   const TITLE_MIN_H = 44;
-  const AUTHOR_MIN_H = 20; 
+  const AUTHOR_MIN_H = 20;
+
+  const handleReturn = (e) => {
+    e.stopPropagation();
+    onReturn?.(book);
+  };
+
+  const handleReview = (e) => {
+    e.stopPropagation();
+    onReview?.(book);
+  };
 
   return (
     <article
@@ -17,7 +32,7 @@ export default function BookCard({ book }) {
         overflow: "hidden",
       }}
     >
-      {/* Row 1: image (fixed height) */}
+      {/* Row 1: image */}
       <div
         style={{
           display: "flex",
@@ -37,11 +52,13 @@ export default function BookCard({ book }) {
         />
       </div>
 
-      {/* Row 2: content (fills remaining space) */}
+      {/* Row 2: content */}
       <div
         style={{
           display: "grid",
-          gridTemplateRows: "auto auto 1fr auto",
+          gridTemplateRows: showActions
+            ? "auto auto 1fr auto auto"
+            : "auto auto 1fr auto",
           rowGap: 6,
           padding: "14px 16px 16px",
         }}
@@ -80,6 +97,7 @@ export default function BookCard({ book }) {
         >
           {book.author}
         </p>
+
         <div />
 
         <div
@@ -93,6 +111,51 @@ export default function BookCard({ book }) {
           <span>{book.genre ?? "—"}</span>
           <span>{book.available_copies ?? 0} left</span>
         </div>
+
+        {showActions && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 8,
+              marginTop: 8,
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleReturn}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #e2e8f0",
+                background: "#f8fafc",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+              title="Return this book"
+            >
+              Return
+            </button>
+            <button
+              type="button"
+              onClick={handleReview}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #0ea5e9",
+                background: "#0ea5e9",
+                color: "white",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+              title="Leave a review"
+            >
+              Review
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );

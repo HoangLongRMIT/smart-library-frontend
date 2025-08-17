@@ -9,14 +9,12 @@ const NAVS = {
   user: [
     { key: "discover", label: "Discover", icon: "home" },
     { key: "library", label: "My Library", icon: "library" },
-    { key: "logout", label: "Logout", icon: "logout" },
   ],
   admin: [
     { key: "discover", label: "Discover", icon: "home" },
     { key: "books", label: "Books", icon: "book" },
     { key: "reports", label: "Reports", icon: "reports" },
     { key: "analytics", label: "Reading Analytics", icon: "analytics" },
-    { key: "logout", label: "Logout", icon: "logout" },
   ],
 };
 

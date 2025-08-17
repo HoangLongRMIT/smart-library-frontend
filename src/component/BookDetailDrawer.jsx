@@ -14,7 +14,6 @@ export default function BookDetailDrawer({ book, onClose }) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={onClose}
         style={{
