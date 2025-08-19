@@ -1,9 +1,11 @@
 import React from "react";
+import Logo from "./logo";
+import "/src/css/Sidebar.css";
 
-const BLUE = "#0096FF";
+const BLUE = "#000054";
 const TEXT = "#334155";
 const MUTED = "#94A3B8";
-const HOVER = "rgba(0,150,255,0.08)";
+const HOVER = "lightgray";
 
 const NAVS = {
   user: [
@@ -84,7 +86,7 @@ function NavButton({ item, active, onClick }) {
     background: isActive ? "#FFFFFF" : "transparent",
     color: isActive ? BLUE : TEXT,
     cursor: "pointer",
-    transition: "background 120ms ease, color 120ms ease, border-color 120ms ease",
+    transition: "background 200ms ease, color 200ms ease, border-color 200ms ease",
   };
   return (
     <button
@@ -115,43 +117,11 @@ export default function Sidebar({ active, onChange, role = "user" }) {
   const navItems = NAVS[role] || NAVS.user;
 
   return (
-    <aside
-      style={{
-        flex: "0 0 22%",
-        minWidth: 230,
-        maxWidth: 230,
-        background: "#FFFFFF",
-        borderRight: "1px solid #E5E7EB",
-        height: "100vh",
-        position: "fixed",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
-      {/* Brand */}
-      <div style={{ padding: "18px 16px", borderBottom: "1px solid #EEF2F7", display: "flex", alignItems: "center", gap: 10 }}>
-        <div
-          style={{
-            background: BLUE,
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            display: "grid",
-            placeItems: "center",
-            color: "#fff",
-            fontWeight: 800,
-          }}
-        >
-          B
-        </div>
-        <div style={{ fontWeight: 800, fontSize: 18, color: BLUE }}>
-          BookBase
-        </div>
-      </div>
+    <aside>
+      <Logo/>
 
       {/* Nav */}
-      <nav style={{ padding: 12, display: "grid", gap: 8 }}>
+      <nav>
         {navItems.map((it) => (
           <NavButton
             key={it.key}

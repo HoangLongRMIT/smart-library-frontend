@@ -1,0 +1,19 @@
+nav{
+    padding: 12; 
+    display: grid; 
+    gap: 8
+}
+
+aside {
+    flex: "0 0 22%";
+        width: 100%;
+        max-width: 230px;
+        min-width: 230px;
+        background: "#FFFFFF";
+        border-right: "1px solid #E5E7EB";
+        height: "100vh";
+        position: "fixed";
+        display: "flex";
+        flex-direction: "column";
+        overflow: "hidden";
+}

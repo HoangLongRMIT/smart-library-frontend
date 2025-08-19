@@ -50,17 +50,8 @@ export default function App({ role = "admin" }) {
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
-        marginLeft: "var(--sidebar-width)",
       }}>
-        <header style={{
-          padding: "16px 20px",
-          background: "#fff",
-          borderBottom: "1px solid #E5E7EB",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}>
+        <header className="header">
           <h2 style={{ margin: 0, fontWeight: 700, color: "#0F172A" }}>
             {TITLES[tab] ?? "Not found"}
           </h2>
@@ -68,22 +59,14 @@ export default function App({ role = "admin" }) {
           <button
             type="button"
             onClick={handleLogout}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid #ef4444",
-              background: "#ef4444",
-              color: "#fff",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
+            id="logout-btn"
             title="Log out"
           >
             Log out
           </button>
         </header>
 
-        <section style={{ padding: 24, maxWidth: 1120, width: "100%", margin: "0 auto", flex: 1 }}>
+        <section>
           {PAGES[tab] ?? <div>Not found</div>}
         </section>
       </main>

@@ -1,0 +1,55 @@
+.maincontent {
+    margin: 0 auto;
+    padding: 16px;
+}
+
+button {
+    font-size: 15px;
+}
+
+/* Admin Book Page */
+.tabs-container {
+    display: "flex";
+    gap: 8;
+    margin-bottom: 24px;
+}
+
+.tab{
+    margin: 0 16px 0 0;
+}
+
+#submit-btn {
+    margin-top: 24px;
+}
+
+label {
+    display: block;
+    font-size: 16px!important;
+    color: #000054;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+span.label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.input-field{
+    width: 100%;
+    max-width: 80%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #000054;
+    font-size: 14px;
+    color: #334155;
+}
+
+#search-input, #select-input {
+    max-width: 90%;
+}
+
+.search-icon {
+    color: #000054;
+    font-size: 24px;
+}

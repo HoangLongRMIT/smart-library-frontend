@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import BookGrid from "../component/BookGrid";
+import "/src/css/Typo.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
 
@@ -65,79 +66,15 @@ export default function BookPage() {
 
   return (
     <>
-      <style>{`
-        .bp-search-bar {
-          position: sticky; top: 0; z-index: 10;
-          margin-bottom: 16px;
-          background: rgba(255,255,255,0.9);
-          backdrop-filter: saturate(120%) blur(6px);
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 16px;
-          box-shadow: 0 1px 2px rgba(0,0,0,.04);
-        }
-        .bp-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
-        @media (min-width: 768px) {
-          .bp-grid { grid-template-columns: repeat(12, 1fr); }
-          .bp-col-3 { grid-column: span 3; }
-          .bp-col-12 { grid-column: span 12; }
-        }
-        .bp-label { display:block; font-size:13px; color:#475569; margin-bottom:6px; }
-        .bp-inputWrap {
-          display:flex; align-items:center; gap:8px;
-          border:1px solid #e2e8f0; background:#f8fafc;
-          padding:10px 12px; border-radius:10px;
-          transition: background .2s, border-color .2s, box-shadow .2s;
-        }
-        .bp-inputWrap:hover { background:#fff; }
-        .bp-inputWrap:focus-within {
-          background:#fff; border-color:#0ea5e9; box-shadow:0 0 0 2px rgba(14,165,233,.2);
-        }
-        .bp-input {
-          width:100%; border:none; outline:none; background:transparent; color:#0f172a;
-        }
-        .bp-input::placeholder { color:#94a3b8; }
-        .bp-icon { width:18px; height:18px; color:#64748b; flex:0 0 auto; }
-        .bp-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding-top:4px; }
-        .bp-btn {
-          display:inline-flex; align-items:center; gap:8px;
-          font-weight:700; border-radius:10px; padding:10px 14px;
-          cursor:pointer; transition: transform .02s ease, background .2s, border-color .2s, color .2s;
-          user-select:none;
-        }
-        .bp-btn:active { transform: translateY(1px); }
-        .bp-btn--primary { background:#0ea5e9; border:1px solid #0ea5e9; color:#fff; }
-        .bp-btn--primary:hover { background:#0284c7; }
-        .bp-btn--primary[disabled] { opacity:.6; cursor:not-allowed; }
-        .bp-btn--secondary { background:#fff; border:1px solid #cbd5e1; color:#334155; }
-        .bp-btn--secondary:hover { background:#f1f5f9; }
-        .bp-btn--secondary[disabled] { opacity:.6; cursor:not-allowed; }
-        .bp-results {
-          margin-left:auto; display:inline-flex; align-items:center;
-          padding:6px 10px; border-radius:999px; font-size:13px;
-          background:#f1f5f9; color:#334155;
-        }
-        .bp-chips { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
-        .bp-chip {
-          display:inline-flex; align-items:center; gap:6px;
-          font-size:12px; padding:6px 10px; border-radius:999px;
-          background:#f1f5f9; color:#334155;
-        }
-        .bp-chip__x {
-          width:18px; height:18px; display:grid; place-items:center;
-          border:none; background:transparent; border-radius:999px; color:#475569; cursor:pointer;
-        }
-        .bp-chip__x:hover { background:#e2e8f0; }
-      `}</style>
-
       <form className="bp-search-bar" onKeyDown={onKeyDown}>
         <div className="bp-grid">
           <div className="bp-col-3">
-            <label className="bp-label">Title</label>
+            <div className="bp-label">Title</div>
+            {/* <label className="bp-label">Title</label> */}
             <div className="bp-inputWrap">
-              <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
+              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19z"/>
-              </svg>
+              </svg> */} 
               <input
                 aria-label="Title"
                 className="bp-input"
@@ -149,11 +86,12 @@ export default function BookPage() {
           </div>
 
           <div className="bp-col-3">
-            <label className="bp-label">Author</label>
+          <div className="bp-label">Author</div>
+            {/* <label className="bp-label">Author</label> */}
             <div className="bp-inputWrap">
-              <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
+              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2h19.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
-              </svg>
+              </svg> */}
               <input
                 aria-label="Author"
                 className="bp-input"
@@ -165,11 +103,12 @@ export default function BookPage() {
           </div>
 
           <div className="bp-col-3">
-            <label className="bp-label">Genre</label>
+            <div className="bp-label">Genre</div>
+            {/* <label className="bp-label">Genre</label> */}
             <div className="bp-inputWrap">
-              <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
+              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/>
-              </svg>
+              </svg> */}
               <input
                 aria-label="Genre"
                 className="bp-input"
@@ -181,11 +120,12 @@ export default function BookPage() {
           </div>
 
           <div className="bp-col-3">
-            <label className="bp-label">Publisher</label>
+            <div className="bp-label">Publisher</div>
+            {/* <label className="bp-label">Publisher</label> */}
             <div className="bp-inputWrap">
-              <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
+              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M12 2L3 7v13h6v-6h6v6h6V7z"/>
-              </svg>
+              </svg> */}
               <input
                 aria-label="Publisher"
                 className="bp-input"
@@ -203,10 +143,11 @@ export default function BookPage() {
               disabled={loading}
               className="bp-btn bp-btn--primary"
               title="Search books"
+              id="search-btn"
             >
-              <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
+              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19z"/>
-              </svg>
+              </svg> */}
               Search
             </button>
             <button
@@ -215,6 +156,7 @@ export default function BookPage() {
               disabled={loading}
               className="bp-btn bp-btn--secondary"
               title="Clear filters"
+              id="clear-btn"
             >
               Clear
             </button>
@@ -244,9 +186,14 @@ export default function BookPage() {
         )}
       </form>
 
-      {loading ? (
+      {/* repetitive Loading text - should only keep 1 of the 2*/}
+      
+      {/* {loading ? (
         <div style={{ padding: "32px 0", color: "#64748B" }}>Loading…</div>
       ) : (
+        <BookGrid books={books} />
+      )} */}
+      {(
         <BookGrid books={books} />
       )}
     </>
