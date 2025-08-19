@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import "/src/css/pages.css"
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
 const USE_MOCK = true;
@@ -102,50 +103,34 @@ export default function ReportsPage() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          padding: 12,
-          marginBottom: 16,
-          display: "grid",
-          gridTemplateColumns: "repeat(5, 1fr)",
-          gap: 100,
-        }}
-      >
+    <div>
+      <div className="date-filter-group">
         <Field label="Start date">
           <input
+            className="date-input"
             type="date"
             value={start}
             max={end || undefined}
             onChange={(e) => setStart(e.target.value)}
-            style={inputStyle}
           />
         </Field>
         <Field label="End date">
           <input
+            className="date-input"
             type="date"
             value={end}
             min={start || undefined}
             onChange={(e) => setEnd(e.target.value)}
-            style={inputStyle}
           />
         </Field>
         <div style={{ alignSelf: "end" }}>
           <button
+            id="run-reports"
             onClick={runReports}
             disabled={loading}
             style={{
-              padding: "10px 14px",
-              borderRadius: 10,
-              border: "1px solid #0ea5e9",
               background: loading ? "#93c5fd" : "#0ea5e9",
-              color: "white",
-              fontWeight: 800,
               cursor: loading ? "not-allowed" : "pointer",
-              width: "100%",
             }}
           >
             {loading ? "Running…" : "Run Reports"}
@@ -225,8 +210,8 @@ export default function ReportsPage() {
 // ---- Reusable bits
 function Field({ label, children }) {
   return (
-    <label style={{ display: "block" }}>
-      <span style={{ display: "block", fontSize: 13, color: "#475569", marginBottom: 6 }}>
+    <label className="date-range-selector" style={{ display: "block" }}>
+      <span className="label">
         {label}
       </span>
       {children}
@@ -236,7 +221,7 @@ function Field({ label, children }) {
 
 function ReportCard({ title, description, rows, columns, emptyText, onExport }) {
   return (
-    <div
+    <div className="report-category"
       style={{
         background: "#fff",
         border: "1px solid #e2e8f0",
@@ -253,8 +238,8 @@ function ReportCard({ title, description, rows, columns, emptyText, onExport }) 
           marginBottom: 8,
         }}
       >
-        <div>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>{title}</h3>
+        <div className="title-container">
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800}}>{title}</h3>
           {description ? (
             <p style={{ margin: 0, color: "#64748B", fontSize: 13 }}>{description}</p>
           ) : null}
@@ -262,12 +247,12 @@ function ReportCard({ title, description, rows, columns, emptyText, onExport }) 
       </div>
 
       {!rows || rows.length === 0 ? (
-        <div style={{ padding: 8, color: "#64748B" }}>{emptyText}</div>
+        <div style={{ padding: 8, color: "#64748B"}}>{emptyText}</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table style={{borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #e2e8f0" }}>
+              <tr style={{ textAlign: "left"}}>
                 {columns.map((c) => (
                   <th key={c.key} style={{ padding: 8 }}>
                     {c.label}

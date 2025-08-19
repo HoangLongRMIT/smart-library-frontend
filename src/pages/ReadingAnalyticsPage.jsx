@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import "/src/css/pages.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
 const USE_MOCK = true;      // flip to false when backend is ready
@@ -126,9 +127,9 @@ export default function ReadingAnalyticPage() {
   }, [params]);
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
-      <p style={{ marginTop: 0, color: "#64748B", fontSize: 13 }}>
-        All time · Top {DEFAULT_LIMIT}
+    <div style={{ margin: "0 auto"}}>
+      <p style={{ marginTop: 0, color: "#64748B", fontSize: 16, paddingLeft: 16}}>
+        All time · Top {DEFAULT_LIMIT} 
       </p>
 
       {loading ? (
@@ -137,7 +138,7 @@ export default function ReadingAnalyticPage() {
 
       <ReportCard
         title="Average session time per user"
-        description="All time"
+        // description="All time" - (repettive with header)
         rows={avgSessionPerUser}
         emptyText="No sessions recorded."
         columns={[
@@ -156,7 +157,7 @@ export default function ReadingAnalyticPage() {
 
       <ReportCard
         title="Most highlighted books"
-        description="All time"
+        //description="All time"
         rows={mostHighlightedBooks}
         emptyText="No highlights recorded."
         columns={[
@@ -173,7 +174,7 @@ export default function ReadingAnalyticPage() {
 
       <ReportCard
         title="Top books by total reading time"
-        description={`Top ${DEFAULT_LIMIT} · All time`}
+        //description={`Top ${DEFAULT_LIMIT} · All time`}
         rows={topBooksByTime}
         emptyText="No reading time recorded."
         columns={[
@@ -193,7 +194,7 @@ export default function ReadingAnalyticPage() {
 
 function ReportCard({ title, description, rows, columns, emptyText, onExport }) {
   return (
-    <div
+    <div className="report-categrory"
       style={{
         background: "#fff",
         border: "1px solid #e2e8f0",
@@ -210,7 +211,7 @@ function ReportCard({ title, description, rows, columns, emptyText, onExport }) 
           marginBottom: 8,
         }}
       >
-        <div>
+        <div className="title-container">
           <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>{title}</h3>
           {description ? (
             <p style={{ margin: 0, color: "#64748B", fontSize: 13 }}>{description}</p>
@@ -222,9 +223,9 @@ function ReportCard({ title, description, rows, columns, emptyText, onExport }) 
         <div style={{ padding: 8, color: "#64748B" }}>{emptyText}</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table style={{borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #e2e8f0" }}>
+              <tr style={{ textAlign: "left"}}>
                 {columns.map((c) => (
                   <th key={c.key} style={{ padding: 8 }}>
                     {c.label}

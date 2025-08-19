@@ -53,3 +53,55 @@ span.label {
     color: #000054;
     font-size: 24px;
 }
+
+/* Report Page */
+
+.date-filter-group{
+    width: 100%;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 100;
+}
+
+.date-input {
+    width: 80%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #000054;
+    font-size: 14px;
+    color: #334155;
+}
+
+#run-reports {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 800;
+    width: initial;
+    background-color: #000054!important;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+    margin-bottom: 8px;
+}
+
+#run-reports:hover {
+    background-color: #7ae1aa!important;
+    border: 1px solid #000054;
+    color: #000054;
+    transition: all 0.2s ease-in-out;
+}
+
+.title-container {
+    width: 100%;
+    border-bottom: 1px solid black;
+    padding-bottom: 8px;
+}
+
+.report-category tr, td{
+    width: 500px;
+}
