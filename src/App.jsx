@@ -4,6 +4,7 @@ import BookPage from "./pages/BookPage";
 import MyLibraryPage from "./pages/MyLibraryPage";
 import AdminBookPage from "./pages/AdminBookPage";
 import ReportsPage from "./pages/ReportPage";
+import LoginPage from "./pages/LoginPage";
 import ReadingAnalyticPage from "./pages/ReadingAnalyticsPage";
 
 const sidebarWidth = "230px";
@@ -17,6 +18,7 @@ export default function App({ role = "admin" }) {
     library: <MyLibraryPage />,
     reports: role === "admin" ? <ReportsPage /> : <p>Not authorized</p>,
     analytics: <ReadingAnalyticPage />,
+    login: <LoginPage />,
   };
 
   const TITLES = {

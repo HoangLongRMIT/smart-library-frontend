@@ -1,8 +1,16 @@
 #root {
   /* max-width: 1280px; */
   margin: 0 auto;
-  padding: 1rem 1rem 0;
+  /* padding: 1rem 1rem 0; */
   /* text-align: center; */
+}
+
+/* Universal Font */
+body {
+  font-family:'SF Pro Display', sans-serif;;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0;
 }
 
 .header {

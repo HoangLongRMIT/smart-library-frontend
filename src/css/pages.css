@@ -7,6 +7,21 @@ button {
     font-size: 15px;
 }
 
+.input-field{
+    width: 100%;
+    max-width: 80%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #000054;
+    font-size: 14px;
+    color: #334155;
+}
+
+.input-field input, .input-field input:focus-visible {
+    border: none;
+    outline: none;
+}
+
 /* Admin Book Page */
 .tabs-container {
     display: "flex";
@@ -33,16 +48,6 @@ label {
 span.label {
     display: block;
     margin-bottom: 8px;
-}
-
-.input-field{
-    width: 100%;
-    max-width: 80%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #000054;
-    font-size: 14px;
-    color: #334155;
 }
 
 #search-input, #select-input {
@@ -104,4 +109,95 @@ span.label {
 
 .report-category tr, td{
     width: 500px;
+}
+
+/* Login Page */
+
+.login-page{
+    display: flex;
+    height: 100vh;
+    background-color: #f0f4f8;
+}
+
+.cover-img {
+    width: 65%;
+    position: fixed;
+    height: 100vh;
+    position: relative;
+    background-image: url(../image/sgs-beanland-library-14.jpg);
+    filter: brightness(0.4);
+    align-items: center;
+    -webkit-mask-image: linear-gradient(to top, rgb(0, 0, 0, 1), rgba(0, 0, 0, 0.9));
+}
+
+.cover-img img{
+    width: 100%;
+    height: auto;
+    background-size: cover;
+    background-position: center;
+}
+
+.content-container {
+    width: 35%;
+    padding: 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#username, #password {
+    width: -webkit-fill-available;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid gray;
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 16px;
+}
+
+#login-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: white;
+    font-weight: normal;
+    width: 100%;
+    background-color: #000054!important;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+}
+
+.login-form {
+    width: -webkit-fill-available;
+}
+
+.logo-container {
+    position: absolute;
+    padding: 36px;
+    z-index: 9999;
+}
+
+.welcome-text {
+    position: absolute;
+    bottom: 72px;
+    margin: 16px 16px 16px 48px;
+    /* backdrop-filter: blur(2px) brightness(0.5); */
+    padding: 16px;
+    z-index: 9999;
+}
+
+.welcome-text h1{
+    position: relative;
+    font-size: 72px;
+    color: #fff;
+    margin: 16px 0;
+}
+
+.welcome-text p{
+    position: relative;
+    font-size: 24px;
+    color: #fff;
+    bottom: 16px;
+    margin: 0;
+    font-weight: normal;
 }
