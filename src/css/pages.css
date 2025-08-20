@@ -125,9 +125,7 @@ span.label {
     height: 100vh;
     position: relative;
     background-image: url(../image/sgs-beanland-library-14.jpg);
-    filter: brightness(0.4);
     align-items: center;
-    -webkit-mask-image: linear-gradient(to top, rgb(0, 0, 0, 1), rgba(0, 0, 0, 0.9));
 }
 
 .cover-img img{
@@ -181,21 +179,21 @@ span.label {
     position: absolute;
     bottom: 72px;
     margin: 16px 16px 16px 48px;
-    /* backdrop-filter: blur(2px) brightness(0.5); */
+    backdrop-filter: blur(2px) brightness(0.3);
     padding: 16px;
     z-index: 9999;
 }
 
 .welcome-text h1{
     position: relative;
-    font-size: 72px;
+    font-size: 3rem;
     color: #fff;
     margin: 16px 0;
 }
 
 .welcome-text p{
     position: relative;
-    font-size: 24px;
+    font-size: 1.5rem;
     color: #fff;
     bottom: 16px;
     margin: 0;
