@@ -9,10 +9,10 @@ export default function LoginPage() {
             <LogoWhite />
         </div>
         <div className="cover-img">
-        </div>
-        <div className="welcome-text">
-            <h1>Welcome to RMIT Library</h1>
-            <p>Read, browse and expand your knowledge</p>
+            <div className="welcome-text">
+                <h1>Welcome to RMIT Library</h1>
+                <p>Read, browse and expand your knowledge</p>
+            </div>
         </div>
         <div className="content-container">
         <div className="login-form">

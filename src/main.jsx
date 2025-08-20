@@ -8,7 +8,7 @@ import React from 'react';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-  {/* <App/> For testing purposes, replace with <App /> when ready */}
-    <LoginPage />
+  <App/>
+    {/* <LoginPage /> */}
   </React.StrictMode>
 )
