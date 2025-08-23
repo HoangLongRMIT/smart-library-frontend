@@ -1,4 +1,5 @@
-import { useState } from "react";
+// src/App.jsx
+import { useEffect, useMemo, useState } from "react";
 import Sidebar from "./component/SideBar";
 import BookPage from "./pages/BookPage";
 import MyLibraryPage from "./pages/MyLibraryPage";
@@ -9,17 +10,22 @@ import ReadingAnalyticPage from "./pages/ReadingAnalyticsPage";
 
 const sidebarWidth = "230px";
 
-export default function App({ role = "admin" }) {
+export default function App() {
   const [tab, setTab] = useState("discover");
+  const [authedUser, setAuthedUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("user") || "null"); }
+    catch { return null; }
+  });
+  const isAuthed = !!localStorage.getItem("authToken");
+  const role = authedUser?.role || "user";
 
-  const PAGES = {
+  const PAGES = useMemo(() => ({
     discover: <BookPage />,
     books: role === "admin" ? <AdminBookPage /> : <p>Not authorized</p>,
     library: <MyLibraryPage />,
     reports: role === "admin" ? <ReportsPage /> : <p>Not authorized</p>,
     analytics: <ReadingAnalyticPage />,
-    login: <LoginPage />,
-  };
+  }), [role]);
 
   const TITLES = {
     discover: "Discover",
@@ -34,8 +40,16 @@ export default function App({ role = "admin" }) {
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
     } finally {
-      window.location.href = "/login";
+      setAuthedUser(null);
+      setTab("discover");
+      // no hard redirect needed; we render LoginPage when !isAuthed
+      // window.location.href = "/login";
     }
+  }
+
+  // If not authenticated, show LoginPage only
+  if (!isAuthed) {
+    return <LoginPage onSuccess={(u) => setAuthedUser(u)} />;
   }
 
   return (
@@ -47,23 +61,12 @@ export default function App({ role = "admin" }) {
       ["--sidebar-width"]: sidebarWidth,
     }}>
       <Sidebar active={tab} onChange={setTab} role={role} />
-      <main style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        overflowY: "auto",
-      }}>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto" }}>
         <header className="header">
           <h2 style={{ margin: 0, fontWeight: 700, color: "#0F172A" }}>
             {TITLES[tab] ?? "Not found"}
           </h2>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            id="logout-btn"
-            title="Log out"
-          >
+          <button type="button" onClick={handleLogout} id="logout-btn" title="Log out">
             Log out
           </button>
         </header>
