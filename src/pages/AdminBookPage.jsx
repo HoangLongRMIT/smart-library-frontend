@@ -32,7 +32,7 @@ export default function AdminBookPage() {
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE}/books?limit=500`);
+        const res = await fetch(`${API_BASE}/admin/books?limit=500`);
         const data = await res.json();
         if (!cancelled) setBooks(Array.isArray(data) ? data : []);
       } catch (e) {
@@ -48,7 +48,7 @@ export default function AdminBookPage() {
   const refresh = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/books?limit=500`);
+      const res = await fetch(`${API_BASE}/admin/books?limit=500`);
       setBooks(await res.json());
     } catch (e) {
       console.error(e);
@@ -135,7 +135,7 @@ function AddBookPanel({ onCreated }) {
       const count = Number(form.initial_copies || 0);
       if (count > 0) {
         const invRes = await fetch(
-          `${API_BASE}/admin/books/${created.id ?? created.book_id}/inventory/add`,
+          `${API_BASE}/admin/books/${created.id ?? created.book_id}/inventory/update`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -203,6 +203,7 @@ function AddBookPanel({ onCreated }) {
 function InventoryPanel({ loading, books, onChange }) {
   const [filter, setFilter] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const [edits, setEdits] = useState({});
 
   const filtered = useMemo(() => {
     const q = filter.toLowerCase();
@@ -214,26 +215,73 @@ function InventoryPanel({ loading, books, onChange }) {
     );
   }, [books, filter]);
 
-  const adjust = async (book, delta) => {
-    if (!delta) return;
-    const bookId = book.id ?? book.book_id ?? book.ISBN;
-    const endpoint = delta > 0 ? "add" : "remove";
+  const setValue = (bookId, val) =>
+    setEdits((m) => ({ ...m, [bookId]: val }));
+
+    const save = async (b) => {
+      const bookId = b.id ?? b.book_id ?? b.ISBN;
+      const current = Number(b.available_copies ?? 0);
+      const nextRaw = edits[bookId] ?? current;
+      const next = Number(nextRaw);
+    
+      if (!Number.isFinite(next) || next < 0) {
+        alert("Please enter a non-negative number.");
+        return;
+      }
+      if (next === current) return;
+    
+      setBusyId(bookId);
+      try {
+        const res = await fetch(
+          `${API_BASE}/admin/books/${bookId}/inventory/update`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ count: next }),
+          }
+        );
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || "Inventory update failed");
+        }
+    
+        await logAdminAction("inventory.set", bookId, {
+          from: current,
+          to: next,
+          delta: next - current,
+        });
+    
+        await onChange?.();
+    
+        setEdits((m) => {
+          const { [bookId]: _x, ...rest } = m;
+          return rest;
+        });
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "Inventory update failed");
+      } finally {
+        setBusyId(null);
+      }
+    };    
+
+  const unretire = async (b) => {
+    const bookId = b.id ?? b.book_id ?? b.ISBN;
     setBusyId(bookId);
     try {
-      const res = await fetch(`${API_BASE}/admin/books/${bookId}/inventory/${endpoint}`, {
+      const res = await fetch(`${API_BASE}/admin/books/${bookId}/unretire`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: Math.abs(delta) }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Inventory update failed");
+        throw new Error(err.error || "Unretire failed");
       }
-      await logAdminAction(`inventory.${endpoint}`, bookId, { count: Math.abs(delta) });
+      await logAdminAction("book.unretire", bookId, {});
       await onChange?.();
     } catch (e) {
       console.error(e);
-      alert(e.message || "Inventory update failed");
+      alert(e.message || "Unretire failed");
     } finally {
       setBusyId(null);
     }
@@ -242,7 +290,7 @@ function InventoryPanel({ loading, books, onChange }) {
   return (
     <div>
       <div style={{ marginBottom: 16, display: "flex", gap: 16, alignItems: "center" }}>
-        <input 
+        <input
           className="input-field"
           id="search-input"
           placeholder="Search by title/author/ISBN"
@@ -258,49 +306,90 @@ function InventoryPanel({ loading, books, onChange }) {
             <tr style={{ textAlign: "left", borderBottom: "1px solid #e2e8f0" }}>
               <th style={{ padding: 8 }}>Title</th>
               <th style={{ padding: 8 }}>Authors</th>
-              <th style={{ padding: 8 }}>Total</th>
               <th style={{ padding: 8 }}>Available</th>
-              <th style={{ padding: 8 }}>Borrowed</th>
+              <th style={{ padding: 8 }}>Set available</th>
+              <th style={{ padding: 8 }}>Status</th>
               <th style={{ padding: 8 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ padding: 12, color: "#64748B" }}>Loading…</td></tr>
+              <tr>
+                <td colSpan={6} style={{ padding: 12, color: "#64748B" }}>
+                  Loading…
+                </td>
+              </tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} style={{ padding: 12, color: "#64748B" }}>No books.</td></tr>
+              <tr>
+                <td colSpan={6} style={{ padding: 12, color: "#64748B" }}>
+                  No books.
+                </td>
+              </tr>
             ) : (
               filtered.map((b) => {
-                const total = Number(b.total_copies ?? (b.available_copies ?? 0));
-                const available = Number(b.available_copies ?? 0);
-                const borrowed = Math.max(0, total - available);
                 const bookId = b.id ?? b.book_id ?? b.ISBN;
+                const available = Number(b.available_copies ?? 0);
+                const edited = edits[bookId];
+                const value = edited ?? available;
+                const changed = Number(value) !== available;
+
+                const isRetired = Boolean(
+                  b.is_retired ?? b.retired ?? b.retired_reason
+                );
+
                 const disabled = busyId === bookId;
 
                 return (
                   <tr key={bookId} style={{ borderBottom: "1px solid #f1f5f9" }}>
                     <td style={{ padding: 8 }}>{b.title}</td>
                     <td style={{ padding: 8 }}>{b.authors ?? b.author ?? "—"}</td>
-                    <td style={{ padding: 8 }}>{total}</td>
                     <td style={{ padding: 8 }}>{available}</td>
-                    <td style={{ padding: 8 }}>{borrowed}</td>
+
+                    <td style={{ padding: 8 }}>
+                      <input
+                        type="number"
+                        min={0}
+                        className="input-field"
+                        style={{ width: 110 }}
+                        value={value}
+                        onChange={(e) => setValue(bookId, Math.max(0, Number(e.target.value)))}
+                        disabled={disabled}
+                      />
+                      {changed && (
+                        <span style={{ marginLeft: 8, fontSize: 12, color: "#64748B" }}>
+                          was {available}
+                        </span>
+                      )}
+                    </td>
+
+                    <td style={{ padding: 8 }}>
+                      {isRetired ? (
+                        <span style={badgeDanger}>Retired</span>
+                      ) : (
+                        <span style={badgeOk}>Active</span>
+                      )}
+                    </td>
+
                     <td style={{ padding: 8 }}>
                       <button
-                        onClick={() => adjust(b, -1)}
-                        disabled={disabled || available <= 0}
-                        title="Remove 1 copy"
-                        style={btnSecondary(disabled || available <= 0)}
+                        onClick={() => save(b)}
+                        disabled={disabled || !changed}
+                        style={btnPrimary(disabled || !changed)}
+                        title="Save available copies"
                       >
-                        –1
+                        Save
                       </button>
-                      <button
-                        onClick={() => adjust(b, +1)}
-                        disabled={disabled}
-                        title="Add 1 copy"
-                        style={btnPrimary(disabled)}
-                      >
-                        +1
-                      </button>
+
+                      {isRetired && (
+                        <button
+                          onClick={() => unretire(b)}
+                          disabled={disabled}
+                          style={btnSecondary(disabled)}
+                          title="Unretire this book"
+                        >
+                          Unretire
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -313,19 +402,32 @@ function InventoryPanel({ loading, books, onChange }) {
   );
 }
 
+const badgeOk = {
+  display: "inline-block",
+  padding: "2px 8px",
+  borderRadius: 999,
+  background: "#ecfeff",
+  color: "#0e7490",
+  fontWeight: 700,
+  fontSize: 12,
+  border: "1px solid #a5f3fc",
+};
+
+const badgeDanger = {
+  display: "inline-block",
+  padding: "2px 8px",
+  borderRadius: 999,
+  background: "#fee2e2",
+  color: "#991b1b",
+  fontWeight: 700,
+  fontSize: 12,
+  border: "1px solid #fecaca",
+};
+
 function RetirePanel({ loading, books, onChange }) {
   const [selectedId, setSelectedId] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
-
-  const options = useMemo(
-    () =>
-      books.map((b) => ({
-        id: b.id ?? b.book_id ?? b.ISBN,
-        label: `${b.title} ${b.ISBN ? `(${b.ISBN})` : ""}`,
-      })),
-    [books]
-  );
 
   const retire = async () => {
     if (!selectedId || !reason.trim()) return;
@@ -355,21 +457,15 @@ function RetirePanel({ loading, books, onChange }) {
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr auto", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr auto", gap: 12, alignItems: "end" }}>
         <div>
           <label>Select book</label>
-          <select
-            className="input-field"
-            id="select-input"
-            disabled={loading}
+          <BookPicker
+            books={books}
             value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-          >
-            <option value="">— Choose —</option>
-            {options.map((o) => (
-              <option key={o.id} value={o.id}>{o.label}</option>
-            ))}
-          </select>
+            onChange={setSelectedId}
+            disabled={loading}
+          />
         </div>
         <TextField
           label="Reason (required)"
@@ -377,8 +473,7 @@ function RetirePanel({ loading, books, onChange }) {
           onChange={(v) => setReason(v)}
           required
         />
-      </div>
-      <div style={{ alignSelf: "end", marginBottom: 8 }}>
+        <div>
           <button
             onClick={retire}
             disabled={!selectedId || !reason.trim() || busy}
@@ -387,6 +482,8 @@ function RetirePanel({ loading, books, onChange }) {
             {busy ? "Retiring…" : "Retire"}
           </button>
         </div>
+      </div>
+
       <p style={{ color: "#64748B", fontSize: 13, marginTop: 10 }}>
         Retired books are hidden from search and cannot be borrowed. The action and reason are logged.
       </p>
@@ -407,6 +504,132 @@ function TextField({ label, value, onChange, required }) {
     </label>
   );
 }
+
+function BookPicker({ books, value, onChange, disabled }) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+
+  // Show the selected label in the input
+  useEffect(() => {
+    const b = books.find(
+      (x) => String(x.id ?? x.book_id ?? x.ISBN) === String(value || "")
+    );
+    if (b) {
+      setQuery(`${b.title}${b.ISBN ? ` (${b.ISBN})` : ""}`);
+    } else if (!open) {
+      setQuery("");
+    }
+  }, [value, books]);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const toRow = (b) => ({
+      id: String(b.id ?? b.book_id ?? b.ISBN),
+      title: String(b.title || ""),
+      authors: String(b.authors ?? b.author ?? ""),
+      isbn: String(b.ISBN ?? ""),
+      label: `${b.title}${b.ISBN ? ` (${b.ISBN})` : ""}`,
+    });
+    const rows = books.map(toRow);
+    return rows
+      .filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.authors.toLowerCase().includes(q) ||
+          r.isbn.toLowerCase().includes(q)
+      );
+  }, [books, query]);
+
+  const pick = (row) => {
+    onChange?.(row.id);
+    setQuery(row.label);
+    setOpen(false);
+  };
+
+  const onKeyDown = (e) => {
+    if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      setOpen(true);
+      return;
+    }
+    if (!open) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => Math.min(i + 1, results.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (results[active]) pick(results[active]);
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        className="input-field"
+        placeholder="Search title / author / ISBN"
+        value={query}
+        disabled={disabled}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+          setActive(0);
+        }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={onKeyDown}
+        onBlur={() => setTimeout(() => setOpen(false), 100)} // allow click
+      />
+      {open && results.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            zIndex: 30,
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "white",
+            border: "1px solid #e2e8f0",
+            borderRadius: 8,
+            marginTop: 6,
+            maxHeight: 260,
+            overflowY: "auto",
+            boxShadow:
+              "0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05)",
+          }}
+          role="listbox"
+        >
+          {results.map((r, i) => (
+            <div
+              key={r.id}
+              role="option"
+              aria-selected={i === active}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => pick(r)}
+              onMouseEnter={() => setActive(i)}
+              style={{
+                padding: "8px 10px",
+                cursor: "pointer",
+                background: i === active ? "#eff6ff" : "white",
+                borderBottom: "1px solid #f1f5f9",
+              }}
+              title={`${r.title}${r.authors ? ` — ${r.authors}` : ""}`}
+            >
+              <div style={{ fontWeight: 600 }}>{r.title}</div>
+              <div style={{ fontSize: 12, color: "#64748B" }}>
+                {r.authors || "Unknown"} {r.isbn ? ` • ${r.isbn}` : ""}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NumberField({ label, value, onChange, min = 0, max }) {
   return (
     <label>

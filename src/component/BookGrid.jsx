@@ -20,7 +20,7 @@ export default function BookGrid({
 
   return (
     <>
-      <div
+      <div className="bp-book-grid"
         style={{
           display: "grid",
           gap: "1.5rem",
@@ -29,7 +29,7 @@ export default function BookGrid({
         }}
       >
         {books.map((b) => {
-          const clickable = !showActions; // avoid accidental drawer open in MyLibrary
+          const clickable = !showActions;
           const Wrapper = ({ children }) =>
             clickable ? (
               <div

@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "./component/SideBar";
 import BookPage from "./pages/BookPage";
@@ -7,6 +6,8 @@ import AdminBookPage from "./pages/AdminBookPage";
 import ReportsPage from "./pages/ReportPage";
 import LoginPage from "./pages/LoginPage";
 import ReadingAnalyticPage from "./pages/ReadingAnalyticsPage";
+
+import "./css/App.css";
 
 const sidebarWidth = "230px";
 
@@ -42,35 +43,24 @@ export default function App() {
     } finally {
       setAuthedUser(null);
       setTab("discover");
-      // no hard redirect needed; we render LoginPage when !isAuthed
-      // window.location.href = "/login";
     }
   }
 
-  // If not authenticated, show LoginPage only
   if (!isAuthed) {
     return <LoginPage onSuccess={(u) => setAuthedUser(u)} />;
   }
 
   return (
-    <div style={{
-      display: "flex",
-      minHeight: "100vh",
-      background: "#F8FAFC",
-      overflow: "hidden",
-      ["--sidebar-width"]: sidebarWidth,
-    }}>
+    <div className="app-shell">
       <Sidebar active={tab} onChange={setTab} role={role} />
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto" }}>
+      <main className="app-main">
         <header className="header">
-          <h2 style={{ margin: 0, fontWeight: 700, color: "#0F172A" }}>
-            {TITLES[tab] ?? "Not found"}
-          </h2>
+          <h2>{TITLES[tab] ?? "Not found"}</h2>
           <button type="button" onClick={handleLogout} id="logout-btn" title="Log out">
             Log out
           </button>
         </header>
-
+  
         <section>
           {PAGES[tab] ?? <div>Not found</div>}
         </section>

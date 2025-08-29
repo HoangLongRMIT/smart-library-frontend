@@ -1,6 +1,6 @@
 import React from "react";
 import Logo from "./logo";
-import "/src/css/Sidebar.css";
+import "../css/Sidebar.css";
 
 const BLUE = "#000054";
 const TEXT = "#334155";
@@ -83,7 +83,7 @@ function NavButton({ item, active, onClick }) {
     padding: "10px 12px",
     border: "1px solid transparent",
     borderRadius: 12,
-    background: isActive ? "#FFFFFF" : "transparent",
+    background: isActive ? "#E5E7EB" : "transparent",
     color: isActive ? BLUE : TEXT,
     cursor: "pointer",
     transition: "background 200ms ease, color 200ms ease, border-color 200ms ease",
@@ -117,10 +117,8 @@ export default function Sidebar({ active, onChange, role = "user" }) {
   const navItems = NAVS[role] || NAVS.user;
 
   return (
-    <aside>
-      <Logo/>
-
-      {/* Nav */}
+    <aside className="sidebar">
+      <Logo />
       <nav>
         {navItems.map((it) => (
           <NavButton
@@ -131,11 +129,6 @@ export default function Sidebar({ active, onChange, role = "user" }) {
           />
         ))}
       </nav>
-
-      <style>{`
-        @media (max-width: 1200px) { aside { flex-basis: 26% } }
-        @media (max-width: 992px)  { aside { flex-basis: 30%; min-width: 180px } }
-      `}</style>
     </aside>
   );
 }

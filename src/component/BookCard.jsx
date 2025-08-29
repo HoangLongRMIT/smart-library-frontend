@@ -32,7 +32,6 @@ export default function BookCard({
         overflow: "hidden",
       }}
     >
-      {/* Row 1: image */}
       <div
         style={{
           display: "flex",
@@ -52,7 +51,6 @@ export default function BookCard({
         />
       </div>
 
-      {/* Row 2: content */}
       <div
         style={{
           display: "grid",
@@ -143,8 +141,7 @@ export default function BookCard({
               style={{
                 padding: "10px 12px",
                 borderRadius: 10,
-                border: "1px solid #0ea5e9",
-                background: "#0ea5e9",
+                background: "#000054",
                 color: "white",
                 fontSize: 14,
                 fontWeight: 600,
