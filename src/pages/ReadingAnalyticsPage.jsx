@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import "/src/css/pages.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
-const USE_MOCK = true;      // flip to false when backend is ready
 const DEFAULT_LIMIT = 5;
 
 const msToMinutes = (ms) => Math.max(0, Math.round(ms / 60000));
@@ -59,62 +58,14 @@ export default function ReadingAnalyticPage() {
     const run = async () => {
       setLoading(true);
       try {
-        if (USE_MOCK) {
-          const sessions = MOCK_SESSIONS;
-
-          const perUser = new Map();
-          for (const s of sessions) {
-            const dur = msToMinutes(new Date(s.end_time) - new Date(s.start_time));
-            const u = s.user_id;
-            const cur = perUser.get(u) || { user_id: u, total: 0, count: 0 };
-            cur.total += dur; cur.count += 1; perUser.set(u, cur);
-          }
-          const avgRows = Array.from(perUser.values())
-            .map((x) => ({
-              user_id: x.user_id,
-              sessions: x.count,
-              avg_minutes: Math.round(x.total / (x.count || 1)),
-              avg_pretty: fmtMinutes(Math.round(x.total / (x.count || 1))),
-            }))
-            .sort((a, b) => b.avg_minutes - a.avg_minutes)
-            .slice(0, limit);
-
-          const byBookHL = new Map();
-          for (const s of sessions) {
-            const hlCount = Array.isArray(s.highlights) ? s.highlights.length : Number(s.highlights || 0);
-            const b = s.book_id;
-            const cur = byBookHL.get(b) || { book_id: b, highlights: 0 };
-            cur.highlights += hlCount; byBookHL.set(b, cur);
-          }
-          const highlightRows = Array.from(byBookHL.values())
-            .sort((a, b) => b.highlights - a.highlights)
-            .slice(0, limit);
-
-          const byBookTime = new Map();
-          for (const s of sessions) {
-            const dur = msToMinutes(new Date(s.end_time) - new Date(s.start_time));
-            const b = s.book_id;
-            const cur = byBookTime.get(b) || { book_id: b, total_minutes: 0, total_pretty: "" };
-            cur.total_minutes += dur; byBookTime.set(b, cur);
-          }
-          const timeRows = Array.from(byBookTime.values())
-            .map((r) => ({ ...r, total_pretty: fmtMinutes(r.total_minutes) }))
-            .sort((a, b) => b.total_minutes - a.total_minutes)
-            .slice(0, limit);
-
-          setAvgSessionPerUser(avgRows);
-          setMostHighlightedBooks(highlightRows);
-          setTopBooksByTime(timeRows);
-        } else {
-          const [u, h, t] = await Promise.all([
-            fetch(`${API_BASE}/analytics/avg-session-time?${params}`).then((r) => r.json()),
-            fetch(`${API_BASE}/analytics/most-highlighted-books?${params}`).then((r) => r.json()),
-            fetch(`${API_BASE}/analytics/top-books-by-time?${params}`).then((r) => r.json()),
-          ]);
-          setAvgSessionPerUser(Array.isArray(u) ? u : []);
-          setMostHighlightedBooks(Array.isArray(h) ? h : []);
-          setTopBooksByTime(Array.isArray(t) ? t : []);
-        }
+        const [u, h, t] = await Promise.all([
+          fetch(`${API_BASE}/analytics/avg-session-time?${params}`).then((r) => r.json()),
+          fetch(`${API_BASE}/analytics/most-highlighted-books?${params}`).then((r) => r.json()),
+          fetch(`${API_BASE}/analytics/top-books-by-time?${params}`).then((r) => r.json()),
+        ]);
+        setAvgSessionPerUser(Array.isArray(u) ? u : []);
+        setMostHighlightedBooks(Array.isArray(h) ? h : []);
+        setTopBooksByTime(Array.isArray(t) ? t : []);
       } catch (e) {
         console.error(e);
         setAvgSessionPerUser([]); setMostHighlightedBooks([]); setTopBooksByTime([]);

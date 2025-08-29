@@ -1,8 +1,5 @@
 #root {
-  /* max-width: 1280px; */
   margin: 0 auto;
-  /* padding: 1rem 1rem 0; */
-  /* text-align: center; */
 }
 
 /* Universal Font */
@@ -43,3 +40,30 @@ body {
 .read-the-docs {
   color: #888;
 }
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  min-height: 100vh;
+  background: #F8FAFC;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: #fff;
+  border-right: 1px solid #E5E7EB;
+}
+
+.app-main {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 0;
+  background: #F8FAFC;
+  padding: 16px;
+}
+
