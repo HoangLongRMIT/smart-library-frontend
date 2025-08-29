@@ -7,6 +7,7 @@ export default function BookGrid({
   showActions = false,
   onReturn,
   onReview,
+  mode = "book",
 }) {
   const [selectedBook, setSelectedBook] = useState(null);
 
@@ -20,7 +21,8 @@ export default function BookGrid({
 
   return (
     <>
-      <div className="bp-book-grid"
+      <div
+        className="bp-book-grid"
         style={{
           display: "grid",
           gap: "1.5rem",
@@ -32,10 +34,7 @@ export default function BookGrid({
           const clickable = !showActions;
           const Wrapper = ({ children }) =>
             clickable ? (
-              <div
-                style={{ cursor: "pointer" }}
-                onClick={() => setSelectedBook(b)}
-              >
+              <div style={{ cursor: "pointer" }} onClick={() => setSelectedBook(b)}>
                 {children}
               </div>
             ) : (
@@ -48,6 +47,7 @@ export default function BookGrid({
                 showActions={showActions}
                 onReturn={onReturn}
                 onReview={onReview}
+                mode={mode}
               />
             </Wrapper>
           );
@@ -55,10 +55,7 @@ export default function BookGrid({
       </div>
 
       {selectedBook && (
-        <BookDetailDrawer
-          book={selectedBook}
-          onClose={() => setSelectedBook(null)}
-        />
+        <BookDetailDrawer book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
     </>
   );
