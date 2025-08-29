@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import BookCard from "./BookCard";
 import BookDetailDrawer from "./BookDetailDrawer";
@@ -20,7 +21,7 @@ export default function BookGrid({
 
   return (
     <>
-      <div
+      <div className="bp-book-grid"
         style={{
           display: "grid",
           gap: "1.5rem",
@@ -29,7 +30,7 @@ export default function BookGrid({
         }}
       >
         {books.map((b) => {
-          const clickable = !showActions; // avoid accidental drawer open in MyLibrary
+          const clickable = !showActions;
           const Wrapper = ({ children }) =>
             clickable ? (
               <div
@@ -41,6 +42,7 @@ export default function BookGrid({
             ) : (
               <div>{children}</div>
             );
+            
           return (
             <Wrapper key={b.book_id ?? b.id ?? b.ISBN}>
               <BookCard

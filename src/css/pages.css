@@ -9,7 +9,7 @@ button {
 
 .input-field{
     width: 100%;
-    max-width: 80%;
+    max-width: -webkit-fill-available;
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid #000054;
@@ -61,8 +61,14 @@ span.label {
 
 /* Report Page */
 
+.reports-stack {
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: 16px;
+    padding-block: 8px;
+  }
+
 .date-filter-group{
-    width: 100%;
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
@@ -126,6 +132,8 @@ span.label {
     position: relative;
     background-image: url(../image/sgs-beanland-library-14.jpg);
     align-items: center;
+    background-size: cover;
+    background-position: center;
 }
 
 .cover-img img{
@@ -144,22 +152,12 @@ span.label {
     align-items: center;
 }
 
-#username, #password {
-    width: -webkit-fill-available;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid gray;
-    font-size: 14px;
-    color: #334155;
-    margin-bottom: 16px;
-}
-
 #login-btn {
     padding: 10px 14px;
     border-radius: 10px;
     color: white;
     font-weight: normal;
-    width: 100%;
+    width: 20%;
     background-color: #000054!important;
     transition: all 0.2s ease-in-out;
     border: 1px solid transparent;
@@ -177,11 +175,11 @@ span.label {
 
 .welcome-text {
     position: absolute;
-    bottom: 72px;
-    margin: 16px 16px 16px 48px;
+    margin: 0px 0px 0px 48px;
     backdrop-filter: blur(2px) brightness(0.3);
     padding: 16px;
     z-index: 9999;
+    top: 45%;
 }
 
 .welcome-text h1{
@@ -198,4 +196,52 @@ span.label {
     bottom: 16px;
     margin: 0;
     font-weight: normal;
+}
+
+.form { 
+    display: grid; 
+    gap: 16px;
+}
+  
+.login-form input[type="email"],
+.login-form input[type="password"] {
+    width: 50%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid gray;
+    font-size: 14px;
+    color: #334155;
+}
+
+.add-book-form {
+    padding: 20px;
+}
+
+#retire-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    width: 100%;
+    background-color: #ffaeae;
+    border: 1px solid transparent;
+}
+
+#retire-form {
+    display: flex;
+    align-items: end;
+    gap: 1rem;
+}
+
+#retire-form button{
+    margin-bottom: 8px;
+}
+
+.book-picker-field{
+    margin-bottom: 8px;
+    width: 50%;
+}
+
+.reason-field{
+    width: 50%;
 }
