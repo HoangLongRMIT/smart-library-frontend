@@ -10,12 +10,7 @@ function getStoredUser() {
   }
 }
 
-export default function BookDetailDrawer({
-  book,
-  onClose,
-  currentUserId,
-  onBorrowed,
-}) {
+export default function BookDetailDrawer({ book, onClose, currentUserId, onBorrowed }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -41,8 +36,7 @@ export default function BookDetailDrawer({
     return Number.isFinite(n) ? Math.max(0, Math.min(5, n)) : null;
   }, [book?.average_rating]);
 
-  const reviewCount =
-    typeof book?.review_count === "number" ? book.review_count : null;
+  const reviewCount = typeof book?.review_count === "number" ? book.review_count : null;
 
   async function handleBorrow() {
     if (!book) return;
@@ -123,7 +117,15 @@ export default function BookDetailDrawer({
             borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          <div style={{ fontWeight: 700, fontSize: 16, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 16,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
             {book.title}
           </div>
           <button
@@ -164,15 +166,12 @@ export default function BookDetailDrawer({
                 borderRadius: 8,
               }}
               onError={(e) => {
-                e.currentTarget.src =
-                  "https://via.placeholder.com/300x400?text=No+Cover";
+                e.currentTarget.src = "https://placehold.co/300x400?text=No+Cover";
               }}
             />
           </div>
 
-          <h2 style={{ margin: "6px 0 2px", fontSize: 20, fontWeight: 800 }}>
-            {book.title}
-          </h2>
+          <h2 style={{ margin: "6px 0 2px", fontSize: 20, fontWeight: 800 }}>{book.title}</h2>
           <div style={{ opacity: 0.85, marginBottom: 12 }}>
             {book.author ?? book.authors ?? "—"}
           </div>
@@ -200,16 +199,19 @@ export default function BookDetailDrawer({
             <Stat label="Reviews" value={reviewCount != null ? reviewCount : "—"} />
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, opacity: 0.9 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 8,
+              opacity: 0.9,
+            }}
+          >
             <span>{book.publisher ?? "—"}</span>
             <span>{available} left</span>
           </div>
 
-          {err && (
-            <div style={{ color: "#fecaca", fontSize: 13, marginBottom: 8 }}>
-              {err}
-            </div>
-          )}
+          {err && <div style={{ color: "#fecaca", fontSize: 13, marginBottom: 8 }}>{err}</div>}
 
           <button
             onClick={handleBorrow}
@@ -230,10 +232,10 @@ export default function BookDetailDrawer({
             {busy
               ? "Borrowing…"
               : !CURRENT_USER_ID
-              ? "Sign in to Borrow"
-              : available > 0
-              ? "Borrow Now"
-              : "Out of Stock"}
+                ? "Sign in to Borrow"
+                : available > 0
+                  ? "Borrow Now"
+                  : "Out of Stock"}
           </button>
         </div>
       </aside>
@@ -241,25 +243,77 @@ export default function BookDetailDrawer({
   );
 }
 
-function RatingStars({ value = 0, size = 18 }) {
-  const pct = Math.max(0, Math.min(100, (value / 5) * 100));
+function RatingStars({
+  value = 0,
+  size = 18,
+  showText = true,
+  maxStars = 5,
+  fillColor = "#FFD166",
+  emptyColor = "#E5E7EB",
+  textColor = "#6B7280",
+}) {
+  const clampedValue = Math.max(0, Math.min(maxStars, value));
+
   return (
-    <div style={{ position: "relative", display: "inline-block", lineHeight: 1, fontSize: size }}>
-      <div style={{ color: "rgba(255,255,255,0.35)" }}>★★★★★</div>
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
       <div
         style={{
-          position: "absolute",
-          inset: 0,
-          width: `${pct}%`,
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          color: "#FFD166",
+          display: "inline-flex",
+          alignItems: "center",
+          fontSize: size,
+          lineHeight: 1,
         }}
-        aria-hidden
       >
-        ★★★★★
+        {Array.from({ length: maxStars }, (_, i) => {
+          const starValue = i + 1;
+          const fillPercentage = Math.max(0, Math.min(1, clampedValue - i)) * 100;
+
+          return (
+            <span
+              key={i}
+              style={{
+                position: "relative",
+                color: emptyColor,
+                textShadow: "0 1px 2px rgba(0,0,0,0.1)",
+              }}
+            >
+              ★
+              {fillPercentage > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    width: `${fillPercentage}%`,
+                    overflow: "hidden",
+                    color: fillColor,
+                  }}
+                >
+                  ★
+                </span>
+              )}
+            </span>
+          );
+        })}
       </div>
-      <span className="sr-only">{`Rating ${value} out of 5`}</span>
+
+      {showText && (
+        <span
+          style={{
+            fontSize: size * 0.75,
+            color: textColor,
+            fontWeight: 500,
+          }}
+        >
+          {clampedValue.toFixed(1)} / {maxStars}
+        </span>
+      )}
     </div>
   );
 }

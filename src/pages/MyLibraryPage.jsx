@@ -140,7 +140,9 @@ export default function MyLibraryPage() {
         const user = JSON.parse(localStorage.getItem("user") || "null");
         const CURRENT_USER_ID = user?.user_id ?? null;
         if (!CURRENT_USER_ID) {
-          if (!cancelled) { setBorrowed([]); }
+          if (!cancelled) {
+            setBorrowed([]);
+          }
           return;
         }
         const res = await fetch(`${API_BASE}/books/${CURRENT_USER_ID}/borrowed`);
@@ -154,7 +156,9 @@ export default function MyLibraryPage() {
       }
     }
     loadBorrowed();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleReturn = async (book) => {
@@ -170,9 +174,7 @@ export default function MyLibraryPage() {
         throw new Error(err.error || "Return failed");
       }
       setBorrowed((prev) =>
-        prev.filter(
-          (b) => (b.checkout_id ?? b.loan_id ?? b.id) !== checkoutId
-        )
+        prev.filter((b) => (b.checkout_id ?? b.loan_id ?? b.id) !== checkoutId)
       );
       const payload = await res.json().catch(() => null);
       const late = payload?.late ?? isLate(book.due_date);
@@ -224,6 +226,7 @@ export default function MyLibraryPage() {
           showActions
           onReturn={handleReturn}
           onReview={handleReview}
+          mode="borrowed"
         />
       )}
 
