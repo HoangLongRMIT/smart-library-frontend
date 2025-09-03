@@ -7,7 +7,7 @@ export function getStoredUser() {
     return localStorage.getItem("authToken") || null;
   }
   
-  export function authHeaders() {
+  export function authnpHeaders() {
     const t = getToken();
     return t ? { Authorization: `Bearer ${t}` } : {};
   }
