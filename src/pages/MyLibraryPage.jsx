@@ -3,40 +3,16 @@ import BookGrid from "../component/BookGrid";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
 
-const USE_MOCK = true;
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+}
 
-const MOCK_BORROWED = [
-  {
-    checkout_id: "chk_1001",
-    book_id: "bk_001",
-    title: "Clean Code",
-    author: "Robert C. Martin",
-    genre: "Software",
-    image_url:
-      "https://images-na.ssl-images-amazon.com/images/I/41xShlnTZTL._SX374_BO1,204,203,200_.jpg",
-    due_date: "2025-08-20T23:59:59Z",
-  },
-  {
-    checkout_id: "chk_1002",
-    book_id: "bk_002",
-    title: "The Pragmatic Programmer",
-    author: "Andrew Hunt, David Thomas",
-    genre: "Software",
-    image_url:
-      "https://images-na.ssl-images-amazon.com/images/I/41as+WafrFL._SX403_BO1,204,203,200_.jpg",
-    due_date: "2025-08-12T23:59:59Z",
-  },
-  {
-    checkout_id: "chk_1003",
-    book_id: "bk_003",
-    title: "Atomic Habits",
-    author: "James Clear",
-    genre: "Self-help",
-    image_url:
-      "https://images-na.ssl-images-amazon.com/images/I/51-uspgqWIL._SX329_BO1,204,203,200_.jpg",
-    due_date: "2025-09-01T23:59:59Z",
-  },
-];
+const user = getStoredUser();
+const CURRENT_USER_ID = user?.user_id ?? null;
 
 function ReviewDialog({ book, open, onClose, onSubmit }) {
   const [rating, setRating] = useState(5);
@@ -158,18 +134,20 @@ export default function MyLibraryPage() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function loadBorrowed() {
       setLoading(true);
       try {
-        if (USE_MOCK) {
-          await new Promise((r) => setTimeout(r, 300));
-          if (!cancelled) setBorrowed(MOCK_BORROWED);
-        } else {
-          const res = await fetch(`${API_BASE}/me/borrowed`);
-          const data = await res.json();
-          if (!cancelled) setBorrowed(data || []);
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        const CURRENT_USER_ID = user?.user_id ?? null;
+        if (!CURRENT_USER_ID) {
+          if (!cancelled) {
+            setBorrowed([]);
+          }
+          return;
         }
+        const res = await fetch(`${API_BASE}/books/${CURRENT_USER_ID}/borrowed`);
+        const data = await res.json();
+        if (!cancelled) setBorrowed(data || []);
       } catch (e) {
         console.error(e);
         if (!cancelled) setBorrowed([]);
@@ -177,7 +155,6 @@ export default function MyLibraryPage() {
         if (!cancelled) setLoading(false);
       }
     }
-
     loadBorrowed();
     return () => {
       cancelled = true;
@@ -187,19 +164,8 @@ export default function MyLibraryPage() {
   const handleReturn = async (book) => {
     const checkoutId = book.checkout_id ?? book.loan_id ?? book.id;
 
-    if (USE_MOCK) {
-      const wasLate = isLate(book.due_date);
-      setBorrowed((prev) =>
-        prev.filter(
-          (b) => (b.checkout_id ?? b.loan_id ?? b.id) !== checkoutId
-        )
-      );
-      alert(wasLate ? "Returned (late)." : "Returned on time. Thank you!");
-      return;
-    }
-
     try {
-      const res = await fetch(`${API_BASE}/checkouts/${checkoutId}/return`, {
+      const res = await fetch(`${API_BASE}/books/${checkoutId}/return`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -208,9 +174,7 @@ export default function MyLibraryPage() {
         throw new Error(err.error || "Return failed");
       }
       setBorrowed((prev) =>
-        prev.filter(
-          (b) => (b.checkout_id ?? b.loan_id ?? b.id) !== checkoutId
-        )
+        prev.filter((b) => (b.checkout_id ?? b.loan_id ?? b.id) !== checkoutId)
       );
       const payload = await res.json().catch(() => null);
       const late = payload?.late ?? isLate(book.due_date);
@@ -226,25 +190,14 @@ export default function MyLibraryPage() {
   const submitReview = async ({ rating, comment }) => {
     if (!reviewTarget) return;
 
-    if (USE_MOCK) {
-      console.log("MOCK REVIEW ->", {
-        book_id:
-          reviewTarget.book_id ?? reviewTarget.id ?? reviewTarget.ISBN,
-        rating,
-        comment,
-      });
-      alert("Review saved (mock).");
-      setReviewTarget(null);
-      return;
-    }
-
     try {
       const payload = {
+        user_id: CURRENT_USER_ID,
         book_id: reviewTarget.book_id ?? reviewTarget.id ?? reviewTarget.ISBN,
         rating: Number(rating),
         comment: (comment || "").trim(),
       };
-      const res = await fetch(`${API_BASE}/reviews`, {
+      const res = await fetch(`${API_BASE}/books/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -273,6 +226,7 @@ export default function MyLibraryPage() {
           showActions
           onReturn={handleReturn}
           onReview={handleReview}
+          mode="borrowed"
         />
       )}
 

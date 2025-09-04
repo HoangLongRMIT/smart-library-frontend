@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import BookGrid from "../component/BookGrid";
 import "/src/css/Typo.css";
 
@@ -7,54 +7,56 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
 export default function BookPage() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    title: "",
-    author: "",
-    genre: "",
-    publisher: "",
-  });
+  const [form, setForm] = useState({ title: "", author: "", genre: "", publisher: "" });
+  const lastAbort = useRef(null);
 
-  useEffect(() => {
-    fetch(`${API_BASE}/books`)
-      .then((r) => r.json())
-      .then((data) => setBooks(data || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const fetchBooks = useCallback(async (filters = form) => {
+    if (lastAbort.current) lastAbort.current.abort();
+    const ctrl = new AbortController();
+    lastAbort.current = ctrl;
 
-  const runSearch = async () => {
-    const params = new URLSearchParams();
-    if (form.title.trim()) params.set("title", form.title.trim());
-    if (form.author.trim()) params.set("author", form.author.trim());
-    if (form.genre.trim()) params.set("genre", form.genre.trim());
-    if (form.publisher.trim()) params.set("publisher", form.publisher.trim());
+    const p = new URLSearchParams();
+    const t = (s) => String(s || "").trim();
+    if (t(filters.title)) p.set("title", t(filters.title));
+    if (t(filters.author)) p.set("author", t(filters.author));
+    if (t(filters.genre)) p.set("genre", t(filters.genre));
+    if (t(filters.publisher)) p.set("publisher", t(filters.publisher));
+
+    p.set("_", Date.now().toString());
 
     setLoading(true);
     try {
       const res = await fetch(
-        `${API_BASE}/books${params.toString() ? `?${params}` : ""}`
+        `${API_BASE}/books${p.toString() ? `?${p}` : ""}`,
+        { cache: "no-store", signal: ctrl.signal }
       );
       const data = await res.json();
-      setBooks(data || []);
+      setBooks(Array.isArray(data) ? data : []);
     } catch (e) {
-      console.error(e);
+      if (e.name !== "AbortError") console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [form]);
 
-  const clearAll = async () => {
-    setForm({ title: "", author: "", genre: "", publisher: "" });
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/books`);
-      const data = await res.json();
-      setBooks(data || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => { fetchBooks(); }, []);
+  useEffect(() => {
+    const onFocus = () => fetchBooks();
+    const onVisibility = () => { if (!document.hidden) fetchBooks(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [fetchBooks]);
+
+  const runSearch = () => fetchBooks(form);
+
+  const clearAll = () => {
+    const cleared = { title: "", author: "", genre: "", publisher: "" };
+    setForm(cleared);
+    fetchBooks(cleared);
   };
 
   const onKeyDown = (e) => {
@@ -65,16 +67,12 @@ export default function BookPage() {
   };
 
   return (
-    <>
+    <div className="bp-page">
       <form className="bp-search-bar" onKeyDown={onKeyDown}>
         <div className="bp-grid">
           <div className="bp-col-3">
             <div className="bp-label">Title</div>
-            {/* <label className="bp-label">Title</label> */}
             <div className="bp-inputWrap">
-              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19z"/>
-              </svg> */} 
               <input
                 aria-label="Title"
                 className="bp-input"
@@ -86,12 +84,8 @@ export default function BookPage() {
           </div>
 
           <div className="bp-col-3">
-          <div className="bp-label">Author</div>
-            {/* <label className="bp-label">Author</label> */}
+            <div className="bp-label">Author</div>
             <div className="bp-inputWrap">
-              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2h19.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
-              </svg> */}
               <input
                 aria-label="Author"
                 className="bp-input"
@@ -104,11 +98,7 @@ export default function BookPage() {
 
           <div className="bp-col-3">
             <div className="bp-label">Genre</div>
-            {/* <label className="bp-label">Genre</label> */}
             <div className="bp-inputWrap">
-              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/>
-              </svg> */}
               <input
                 aria-label="Genre"
                 className="bp-input"
@@ -121,11 +111,7 @@ export default function BookPage() {
 
           <div className="bp-col-3">
             <div className="bp-label">Publisher</div>
-            {/* <label className="bp-label">Publisher</label> */}
             <div className="bp-inputWrap">
-              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M12 2L3 7v13h6v-6h6v6h6V7z"/>
-              </svg> */}
               <input
                 aria-label="Publisher"
                 className="bp-input"
@@ -142,12 +128,8 @@ export default function BookPage() {
               onClick={runSearch}
               disabled={loading}
               className="bp-btn bp-btn--primary"
-              title="Search books"
               id="search-btn"
             >
-              {/* <svg className="bp-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19z"/>
-              </svg> */}
               Search
             </button>
             <button
@@ -155,7 +137,6 @@ export default function BookPage() {
               onClick={clearAll}
               disabled={loading}
               className="bp-btn bp-btn--secondary"
-              title="Clear filters"
               id="clear-btn"
             >
               Clear
@@ -167,36 +148,18 @@ export default function BookPage() {
           </div>
         </div>
 
-        {/* Active filter chips */}
         {(form.title || form.author || form.genre || form.publisher) && (
           <div className="bp-chips">
-            {form.title && (
-              <Chip label={`Title: ${form.title}`} onClear={() => setForm({ ...form, title: "" })} />
-            )}
-            {form.author && (
-              <Chip label={`Author: ${form.author}`} onClear={() => setForm({ ...form, author: "" })} />
-            )}
-            {form.genre && (
-              <Chip label={`Genre: ${form.genre}`} onClear={() => setForm({ ...form, genre: "" })} />
-            )}
-            {form.publisher && (
-              <Chip label={`Publisher: ${form.publisher}`} onClear={() => setForm({ ...form, publisher: "" })} />
-            )}
+            {form.title && <Chip label={`Title: ${form.title}`} onClear={() => setForm({ ...form, title: "" })} />}
+            {form.author && <Chip label={`Author: ${form.author}`} onClear={() => setForm({ ...form, author: "" })} />}
+            {form.genre && <Chip label={`Genre: ${form.genre}`} onClear={() => setForm({ ...form, genre: "" })} />}
+            {form.publisher && <Chip label={`Publisher: ${form.publisher}`} onClear={() => setForm({ ...form, publisher: "" })} />}
           </div>
         )}
       </form>
 
-      {/* repetitive Loading text - should only keep 1 of the 2*/}
-      
-      {/* {loading ? (
-        <div style={{ padding: "32px 0", color: "#64748B" }}>Loading…</div>
-      ) : (
-        <BookGrid books={books} />
-      )} */}
-      {(
-        <BookGrid books={books} />
-      )}
-    </>
+      <BookGrid books={books} />
+    </div>
   );
 }
 

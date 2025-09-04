@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "/src/css/pages.css"
+import "/src/css/pages.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
-const USE_MOCK = true;
+
+const LIMIT = 10;       
+const THRESHOLD = 3;  
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const daysAgoISO = (n) => {
@@ -11,49 +13,9 @@ const daysAgoISO = (n) => {
   return d.toISOString().slice(0, 10);
 };
 
-function downloadCSV(filename, rows, columns) {
-  const header = columns.map((c) => c.label).join(",");
-  const body = rows
-    .map((r) =>
-      columns
-        .map((c) => {
-          const v = r[c.key] ?? "";
-          const s = String(v).replace(/"/g, '""');
-          return `"${s}"`;
-        })
-        .join(",")
-    )
-    .join("\n");
-  const blob = new Blob([header + "\n" + body], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-const MOCK_MOST_BORROWED = [
-  { book_id: "bk_001", title: "Clean Code", authors: "Robert C. Martin", borrow_count: 42 },
-  { book_id: "bk_002", title: "The Pragmatic Programmer", authors: "A. Hunt, D. Thomas", borrow_count: 37 },
-  { book_id: "bk_003", title: "Atomic Habits", authors: "James Clear", borrow_count: 31 },
-];
-const MOCK_TOP_READERS = [
-  { user_id: "u_100", reader_name: "Alice Nguyen", checkouts_count: 18 },
-  { user_id: "u_101", reader_name: "Bao Tran", checkouts_count: 15 },
-  { user_id: "u_102", reader_name: "Minh Le", checkouts_count: 12 },
-];
-const MOCK_LOW_AVAIL = [
-  { book_id: "bk_004", title: "Deep Work", available_copies: 0, total_copies: 6 },
-  { book_id: "bk_005", title: "Refactoring", available_copies: 1, total_copies: 5 },
-  { book_id: "bk_006", title: "Design Patterns", available_copies: 2, total_copies: 8 },
-];
-
 export default function ReportsPage() {
   const [start, setStart] = useState(daysAgoISO(30));
   const [end, setEnd] = useState(todayISO());
-  const [limit, setLimit] = useState(10);
-  const [threshold, setThreshold] = useState(3);
 
   const [loading, setLoading] = useState(false);
   const [mostBorrowed, setMostBorrowed] = useState([]);
@@ -64,30 +26,32 @@ export default function ReportsPage() {
     const p = new URLSearchParams();
     if (start) p.set("start", start);
     if (end) p.set("end", end);
-    if (limit) p.set("limit", String(limit));
+    p.set("limit", String(LIMIT));
     return p.toString();
-  }, [start, end, limit]);
+  }, [start, end]);
 
   const runReports = async () => {
     setLoading(true);
     try {
-      if (USE_MOCK) {
-        // Simulate network calls
-        await new Promise((r) => setTimeout(r, 250));
-        setMostBorrowed(MOCK_MOST_BORROWED.slice(0, limit));
-        setTopReaders(MOCK_TOP_READERS.slice(0, limit));
-        setLowAvailability(MOCK_LOW_AVAIL.filter((b) => b.available_copies <= threshold));
-      } else {
-        const [mbRes, trRes, laRes] = await Promise.all([
-          fetch(`${API_BASE}/reports/most-borrowed?${params}`),
-          fetch(`${API_BASE}/reports/top-readers?${params}`),
-          fetch(`${API_BASE}/reports/low-availability?threshold=${threshold}&limit=${limit}`),
-        ]);
-        const [mb, tr, la] = await Promise.all([mbRes.json(), trRes.json(), laRes.json()]);
-        setMostBorrowed(Array.isArray(mb) ? mb : []);
-        setTopReaders(Array.isArray(tr) ? tr : []);
-        setLowAvailability(Array.isArray(la) ? la : []);
+      const [mbRes, trRes, laRes] = await Promise.all([
+        fetch(`${API_BASE}/reports/most-borrowed?${params}`),
+        fetch(`${API_BASE}/reports/top-readers?${params}`),
+        fetch(`${API_BASE}/reports/low-availability?threshold=${THRESHOLD}&limit=${LIMIT}`),
+      ]);
+
+      if (!mbRes.ok || !trRes.ok || !laRes.ok) {
+        throw new Error("One of the report endpoints failed");
       }
+
+      const [mb, tr, la] = await Promise.all([
+        mbRes.json(),
+        trRes.json(),
+        laRes.json(),
+      ]);
+
+      setMostBorrowed(Array.isArray(mb) ? mb : []);
+      setTopReaders(Array.isArray(tr) ? tr : []);
+      setLowAvailability(Array.isArray(la) ? la : []);
     } catch (e) {
       console.error(e);
       setMostBorrowed([]);
@@ -103,7 +67,7 @@ export default function ReportsPage() {
   }, []);
 
   return (
-    <div>
+    <div className="reports-stack">
       <div className="date-filter-group">
         <Field label="Start date">
           <input
@@ -138,7 +102,6 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Most Borrowed Books */}
       <ReportCard
         title="Most borrowed books"
         description={`Within ${start} to ${end}`}
@@ -149,17 +112,6 @@ export default function ReportsPage() {
           { key: "authors", label: "Authors" },
           { key: "borrow_count", label: "Borrowed" },
         ]}
-        onExport={() =>
-          downloadCSV(
-            `most_borrowed_${start}_${end}.csv`,
-            mostBorrowed,
-            [
-              { key: "title", label: "Title" },
-              { key: "authors", label: "Authors" },
-              { key: "borrow_count", label: "Borrowed" },
-            ]
-          )
-        }
       />
 
       <ReportCard
@@ -170,16 +122,6 @@ export default function ReportsPage() {
           { key: "reader_name", label: "Reader" },
           { key: "checkouts_count", label: "Checkouts" },
         ]}
-        onExport={() =>
-          downloadCSV(
-            `top_readers_${start}_${end}.csv`,
-            topReaders,
-            [
-              { key: "reader_name", label: "Reader" },
-              { key: "checkouts_count", label: "Checkouts" },
-            ]
-          )
-        }
       />
 
       <ReportCard
@@ -191,37 +133,24 @@ export default function ReportsPage() {
           { key: "available_copies", label: "Available" },
           { key: "total_copies", label: "Total" },
         ]}
-        onExport={() =>
-          downloadCSV(
-            `low_availability_th${threshold}.csv`,
-            lowAvailability,
-            [
-              { key: "title", label: "Title" },
-              { key: "available_copies", label: "Available" },
-              { key: "total_copies", label: "Total" },
-            ]
-          )
-        }
       />
     </div>
   );
 }
 
-// ---- Reusable bits
 function Field({ label, children }) {
   return (
     <label className="date-range-selector" style={{ display: "block" }}>
-      <span className="label">
-        {label}
-      </span>
+      <span className="label">{label}</span>
       {children}
     </label>
   );
 }
 
-function ReportCard({ title, description, rows, columns, emptyText, onExport }) {
+function ReportCard({ title, description, rows, columns, emptyText }) {
   return (
-    <div className="report-category"
+    <div
+      className="report-category"
       style={{
         background: "#fff",
         border: "1px solid #e2e8f0",
@@ -239,7 +168,7 @@ function ReportCard({ title, description, rows, columns, emptyText, onExport }) 
         }}
       >
         <div className="title-container">
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800}}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>{title}</h3>
           {description ? (
             <p style={{ margin: 0, color: "#64748B", fontSize: 13 }}>{description}</p>
           ) : null}
@@ -247,12 +176,12 @@ function ReportCard({ title, description, rows, columns, emptyText, onExport }) 
       </div>
 
       {!rows || rows.length === 0 ? (
-        <div style={{ padding: 8, color: "#64748B"}}>{emptyText}</div>
+        <div style={{ padding: 8, color: "#64748B" }}>{emptyText}</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
-          <table style={{borderCollapse: "collapse" }}>
+          <table style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ textAlign: "left"}}>
+              <tr style={{ textAlign: "left" }}>
                 {columns.map((c) => (
                   <th key={c.key} style={{ padding: 8 }}>
                     {c.label}
@@ -277,11 +206,3 @@ function ReportCard({ title, description, rows, columns, emptyText, onExport }) 
     </div>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: 10,
-  border: "1px solid #e2e8f0",
-  background: "#fff",
-};

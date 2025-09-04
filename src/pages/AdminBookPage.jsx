@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "/src/css/pages.css"
+import "/src/css/pages.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
@@ -42,7 +42,9 @@ export default function AdminBookPage() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const refresh = async () => {
@@ -62,7 +64,8 @@ export default function AdminBookPage() {
       {/* Tabs */}
       <div className="tabs-container">
         {["add", "inventory", "retire"].map((t) => (
-          <button className="tab"
+          <button
+            className="tab"
             key={t}
             onClick={() => setTab(t)}
             style={{
@@ -81,20 +84,8 @@ export default function AdminBookPage() {
       </div>
 
       {tab === "add" && <AddBookPanel onCreated={refresh} />}
-      {tab === "inventory" && (
-        <InventoryPanel
-          loading={loading}
-          books={books}
-          onChange={refresh}
-        />
-      )}
-      {tab === "retire" && (
-        <RetirePanel
-          loading={loading}
-          books={books}
-          onChange={refresh}
-        />
-      )}
+      {tab === "inventory" && <InventoryPanel loading={loading} books={books} onChange={refresh} />}
+      {tab === "retire" && <RetirePanel loading={loading} books={books} onChange={refresh} />}
     </div>
   );
 }
@@ -111,10 +102,7 @@ function AddBookPanel({ onCreated }) {
   });
   const [saving, setSaving] = useState(false);
 
-  const canSubmit =
-    form.title.trim() &&
-    form.authors.trim() &&
-    Number(form.initial_copies) >= 0;
+  const canSubmit = form.title.trim() && form.authors.trim() && Number(form.initial_copies) >= 0;
 
   const submit = async () => {
     if (!canSubmit || saving) return;
@@ -168,15 +156,44 @@ function AddBookPanel({ onCreated }) {
   };
 
   return (
-    <div className="add-book-form" style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12}}>
+    <div
+      className="add-book-form"
+      style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12 }}
+    >
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <TextField label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} required />
-        <TextField label="Authors (comma separated)" value={form.authors} onChange={(v) => setForm({ ...form, authors: v })} required />
-        <TextField label="Publisher" value={form.publisher} onChange={(v) => setForm({ ...form, publisher: v })} />
-        <TextField label="Genre" value={form.genre} onChange={(v) => setForm({ ...form, genre: v })} />
-        <TextField label="ISBN" value={form.ISBN} onChange={(v) => setForm({ ...form, ISBN: v })} />
-        <TextField label="Image URL" value={form.image_url} onChange={(v) => setForm({ ...form, image_url: v })} />
-        <NumberField label="Initial copies" min={0} value={form.initial_copies} onChange={(v) => setForm({ ...form, initial_copies: v })} />
+        <TextField
+          label="Title"
+          value={form.title}
+          onChange={(v) => setForm({ ...form, title: v })}
+          required
+        />
+        <TextField
+          label="Authors (comma separated)"
+          value={form.authors}
+          onChange={(v) => setForm({ ...form, authors: v })}
+          required
+        />
+        <TextField
+          label="Publisher"
+          value={form.publisher}
+          onChange={(v) => setForm({ ...form, publisher: v })}
+        />
+        <TextField
+          label="Genre"
+          value={form.genre}
+          onChange={(v) => setForm({ ...form, genre: v })}
+        />
+        <TextField
+          label="Image URL"
+          value={form.image_url}
+          onChange={(v) => setForm({ ...form, image_url: v })}
+        />
+        <NumberField
+          label="Initial copies"
+          min={0}
+          value={form.initial_copies}
+          onChange={(v) => setForm({ ...form, initial_copies: v })}
+        />
       </div>
 
       <div id="submit-btn">
@@ -209,9 +226,15 @@ function InventoryPanel({ loading, books, onChange }) {
     const q = filter.toLowerCase();
     return books.filter(
       (b) =>
-        String(b.title || "").toLowerCase().includes(q) ||
-        String(b.authors || b.author || "").toLowerCase().includes(q) ||
-        String(b.ISBN || "").toLowerCase().includes(q)
+        String(b.title || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(b.authors || b.author || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(b.ISBN || "")
+          .toLowerCase()
+          .includes(q)
     );
   }, [books, filter]);
 
@@ -264,6 +287,40 @@ function InventoryPanel({ loading, books, onChange }) {
         setBusyId(null);
       }
     };    
+
+  const unretire = async (b) => {
+    const bookId = b.id ?? b.book_id ?? b.ISBN;
+    setBusyId(bookId);
+    try {
+      const res = await fetch(`${API_BASE}/admin/books/${bookId}/unretire`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Unretire failed");
+      }
+      
+      await logAdminAction("inventory.set", bookId, {
+        from: current,
+        to: next,
+        delta: next - current,
+      });
+      
+      await onChange?.();
+
+      setEdits((m) => {
+        const { [bookId]: _x, ...rest } = m;
+        return rest;
+      });
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Unretire failed");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const unretire = async (b) => {
     const bookId = b.id ?? b.book_id ?? b.ISBN;
@@ -332,7 +389,6 @@ function InventoryPanel({ loading, books, onChange }) {
                 const edited = edits[bookId];
                 const value = edited ?? available;
                 const changed = Number(value) !== available;
-
                 const isRetired = Boolean(
                   b.is_retired ?? b.retired ?? b.retired_reason
                 );
@@ -487,7 +543,8 @@ function RetirePanel({ loading, books, onChange }) {
       </div>
 
       <p style={{ color: "#64748B", fontSize: 13, marginTop: 10 }}>
-        Retired books are hidden from search and cannot be borrowed. The action and reason are logged.
+        Retired books are hidden from search and cannot be borrowed. The action and reason are
+        logged.
       </p>
     </div>
   );
@@ -499,10 +556,7 @@ function TextField({ label, value, onChange, required }) {
       <span className="label">
         {label} {required ? <span style={{ color: "#ef4444" }}>*</span> : null}
       </span>
-      <input className="input-field"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <input className="input-field" value={value} onChange={(e) => onChange(e.target.value)} />
     </label>
   );
 }
@@ -636,7 +690,8 @@ function NumberField({ label, value, onChange, min = 0, max }) {
   return (
     <label>
       <span className="label">{label}</span>
-      <input className="input-field"
+      <input
+        className="input-field"
         type="number"
         min={min}
         max={max}

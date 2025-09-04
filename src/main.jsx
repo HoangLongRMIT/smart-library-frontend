@@ -1,14 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './css/App.css'
-import './css/Typo.css'
-import App from './App.jsx'
-import LoginPage from './pages/LoginPage'
-import React from 'react';
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import App from "./App";
+import BookPage from "./pages/BookPage";
 
-createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-  <App/>
-    {/* <LoginPage /> */}
-  </React.StrictMode>
-)
+createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        <Route index element={<BookPage />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+);
