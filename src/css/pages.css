@@ -9,7 +9,7 @@ button {
 
 .input-field{
     width: 100%;
-    max-width: 80%;
+    max-width: -webkit-fill-available;
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid #000054;
@@ -215,4 +215,33 @@ span.label {
 
 .add-book-form {
     padding: 20px;
+}
+
+#retire-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    width: 100%;
+    background-color: #ffaeae;
+    border: 1px solid transparent;
+}
+
+#retire-form {
+    display: flex;
+    align-items: end;
+    gap: 1rem;
+}
+
+#retire-form button{
+    margin-bottom: 8px;
+}
+
+.book-picker-field{
+    margin-bottom: 8px;
+    width: 50%;
+}
+
+.reason-field{
+    width: 50%;
 }

@@ -238,38 +238,76 @@ function InventoryPanel({ loading, books, onChange }) {
     );
   }, [books, filter]);
 
-  const setValue = (bookId, val) => setEdits((m) => ({ ...m, [bookId]: val }));
+  const setValue = (bookId, val) =>
+    setEdits((m) => ({ ...m, [bookId]: val }));
 
-  const save = async (b) => {
+    const save = async (b) => {
+      const bookId = b.id ?? b.book_id ?? b.ISBN;
+      const current = Number(b.available_copies ?? 0);
+      const nextRaw = edits[bookId] ?? current;
+      const next = Number(nextRaw);
+    
+      if (!Number.isFinite(next) || next < 0) {
+        alert("Please enter a non-negative number.");
+        return;
+      }
+      if (next === current) return;
+    
+      setBusyId(bookId);
+      try {
+        const res = await fetch(
+          `${API_BASE}/admin/books/${bookId}/inventory/update`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ count: next }),
+          }
+        );
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || "Inventory update failed");
+        }
+    
+        await logAdminAction("inventory.set", bookId, {
+          from: current,
+          to: next,
+          delta: next - current,
+        });
+    
+        await onChange?.();
+    
+        setEdits((m) => {
+          const { [bookId]: _x, ...rest } = m;
+          return rest;
+        });
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "Inventory update failed");
+      } finally {
+        setBusyId(null);
+      }
+    };    
+
+  const unretire = async (b) => {
     const bookId = b.id ?? b.book_id ?? b.ISBN;
-    const current = Number(b.available_copies ?? 0);
-    const nextRaw = edits[bookId] ?? current;
-    const next = Number(nextRaw);
-
-    if (!Number.isFinite(next) || next < 0) {
-      alert("Please enter a non-negative number.");
-      return;
-    }
-    if (next === current) return;
-
     setBusyId(bookId);
     try {
-      const res = await fetch(`${API_BASE}/admin/books/${bookId}/inventory/update`, {
+      const res = await fetch(`${API_BASE}/admin/books/${bookId}/unretire`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: next }),
+        
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Inventory update failed");
+        throw new Error(err.error || "Unretire failed");
       }
-
+      
       await logAdminAction("inventory.set", bookId, {
         from: current,
         to: next,
         delta: next - current,
       });
-
+      
       await onChange?.();
 
       setEdits((m) => {
@@ -278,7 +316,7 @@ function InventoryPanel({ loading, books, onChange }) {
       });
     } catch (e) {
       console.error(e);
-      alert(e.message || "Inventory update failed");
+      alert(e.message || "Unretire failed");
     } finally {
       setBusyId(null);
     }
@@ -351,8 +389,9 @@ function InventoryPanel({ loading, books, onChange }) {
                 const edited = edits[bookId];
                 const value = edited ?? available;
                 const changed = Number(value) !== available;
-
-                const isRetired = Boolean(b.is_retired ?? b.retired ?? b.retired_reason);
+                const isRetired = Boolean(
+                  b.is_retired ?? b.retired ?? b.retired_reason
+                );
 
                 const disabled = busyId === bookId;
 
@@ -474,10 +513,8 @@ function RetirePanel({ loading, books, onChange }) {
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "2fr 3fr auto", gap: 12, alignItems: "end" }}
-      >
-        <div>
+      <div id="retire-form">
+        <div className="book-picker-field">
           <label>Select book</label>
           <BookPicker
             books={books}
@@ -486,17 +523,19 @@ function RetirePanel({ loading, books, onChange }) {
             disabled={loading}
           />
         </div>
-        <TextField
+        <div className="reason-field">
+          <TextField
           label="Reason (required)"
           value={reason}
           onChange={(v) => setReason(v)}
           required
-        />
+          />
+        </div>
         <div>
           <button
+          id="retire-btn"
             onClick={retire}
             disabled={!selectedId || !reason.trim() || busy}
-            style={btnDanger(!selectedId || !reason.trim() || busy)}
           >
             {busy ? "Retiring…" : "Retire"}
           </button>
@@ -529,7 +568,9 @@ function BookPicker({ books, value, onChange, disabled }) {
 
   // Show the selected label in the input
   useEffect(() => {
-    const b = books.find((x) => String(x.id ?? x.book_id ?? x.ISBN) === String(value || ""));
+    const b = books.find(
+      (x) => String(x.id ?? x.book_id ?? x.ISBN) === String(value || "")
+    );
     if (b) {
       setQuery(`${b.title}${b.ISBN ? ` (${b.ISBN})` : ""}`);
     } else if (!open) {
@@ -547,12 +588,13 @@ function BookPicker({ books, value, onChange, disabled }) {
       label: `${b.title}${b.ISBN ? ` (${b.ISBN})` : ""}`,
     });
     const rows = books.map(toRow);
-    return rows.filter(
-      (r) =>
-        r.title.toLowerCase().includes(q) ||
-        r.authors.toLowerCase().includes(q) ||
-        r.isbn.toLowerCase().includes(q)
-    );
+    return rows
+      .filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.authors.toLowerCase().includes(q) ||
+          r.isbn.toLowerCase().includes(q)
+      );
   }, [books, query]);
 
   const pick = (row) => {
@@ -611,7 +653,8 @@ function BookPicker({ books, value, onChange, disabled }) {
             marginTop: 6,
             maxHeight: 260,
             overflowY: "auto",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05)",
+            boxShadow:
+              "0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05)",
           }}
           role="listbox"
         >

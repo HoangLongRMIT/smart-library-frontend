@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import BookCard from "./BookCard";
 import BookDetailDrawer from "./BookDetailDrawer";
@@ -20,9 +21,7 @@ export default function BookGrid({
   }, [selectedBook]);
 
   return (
-    <>
-      <div
-        className="bp-book-grid"
+      <div className="bp-book-grid"
         style={{
           display: "grid",
           gap: "1.5rem",
@@ -40,6 +39,7 @@ export default function BookGrid({
             ) : (
               <div>{children}</div>
             );
+            
           return (
             <Wrapper key={b.book_id ?? b.id ?? b.ISBN}>
               <BookCard
