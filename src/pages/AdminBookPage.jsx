@@ -322,28 +322,6 @@ function InventoryPanel({ loading, books, onChange }) {
     }
   };
 
-  const unretire = async (b) => {
-    const bookId = b.id ?? b.book_id ?? b.ISBN;
-    setBusyId(bookId);
-    try {
-      const res = await fetch(`${API_BASE}/admin/books/${bookId}/unretire`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Unretire failed");
-      }
-      await logAdminAction("book.unretire", bookId, {});
-      await onChange?.();
-    } catch (e) {
-      console.error(e);
-      alert(e.message || "Unretire failed");
-    } finally {
-      setBusyId(null);
-    }
-  };
-
   return (
     <div>
       <div style={{ marginBottom: 16, display: "flex", gap: 16, alignItems: "center" }}>

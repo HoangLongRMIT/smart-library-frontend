@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import BookCard from "./BookCard";
 import BookDetailDrawer from "./BookDetailDrawer";
 
@@ -21,7 +20,9 @@ export default function BookGrid({
   }, [selectedBook]);
 
   return (
-      <div className="bp-book-grid"
+    <>
+      <div
+        className="bp-book-grid"
         style={{
           display: "grid",
           gap: "1.5rem",
@@ -29,19 +30,15 @@ export default function BookGrid({
           alignItems: "stretch",
         }}
       >
-        {books.map((b) => {
+        {books.map((b, i) => {
+          const key = b.book_id ?? b.id ?? b.ISBN ?? i;
           const clickable = !showActions;
-          const Wrapper = ({ children }) =>
-            clickable ? (
-              <div style={{ cursor: "pointer" }} onClick={() => setSelectedBook(b)}>
-                {children}
-              </div>
-            ) : (
-              <div>{children}</div>
-            );
-            
+          const wrapperProps = clickable
+            ? { style: { cursor: "pointer" }, onClick: () => setSelectedBook(b) }
+            : {};
+
           return (
-            <Wrapper key={b.book_id ?? b.id ?? b.ISBN}>
+            <div key={key} {...wrapperProps}>
               <BookCard
                 book={b}
                 showActions={showActions}
@@ -49,13 +46,16 @@ export default function BookGrid({
                 onReview={onReview}
                 mode={mode}
               />
-            </Wrapper>
+            </div>
           );
         })}
       </div>
 
       {selectedBook && (
-        <BookDetailDrawer book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookDetailDrawer
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+        />
       )}
     </>
   );
