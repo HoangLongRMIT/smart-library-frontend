@@ -5,21 +5,25 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
 
-async function logAdminAction(action, targetId, details = {}) {
+function getStoredUser() {
   try {
-    await fetch(`${API_BASE}/admin/logs`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action,
-        target_type: "book",
-        target_id: String(targetId),
-        details,
-      }),
-    });
-  } catch (e) {
-    console.error("Audit log failed", e);
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
   }
+}
+
+function getCurrentAdminId() {
+  const u = getStoredUser();
+  const idNum = Number(u?.user_id);
+  return Number.isInteger(idNum) && idNum > 0 ? idNum : null;
+}
+
+function authHeaders(extra = {}) {
+  const adminId = getCurrentAdminId();
+  return adminId
+    ? { "x-admin-user-id": String(adminId), ...extra }
+    : { ...extra };
 }
 
 export default function AdminBookPage() {
@@ -110,15 +114,18 @@ function AddBookPanel({ onCreated }) {
     try {
       const res = await fetch(`${API_BASE}/admin/books`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+        title: form.title,
+        authors: form.authors,
+        publisher: form.publisher || "",
+        genre: form.genre || "",
+        image_url: form.image_url || "",
+        admin_user_id: getCurrentAdminId(),
+        }),
       });
       if (!res.ok) throw new Error("Create failed");
       const created = await res.json();
-
-      await logAdminAction("book.create", created.id ?? created.book_id, {
-        snapshot: created,
-      });
 
       const count = Number(form.initial_copies || 0);
       if (count > 0) {
@@ -126,14 +133,11 @@ function AddBookPanel({ onCreated }) {
           `${API_BASE}/admin/books/${created.id ?? created.book_id}/inventory/update`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ count }),
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ count, admin_user_id: getCurrentAdminId() }),
           }
         );
         if (!invRes.ok) throw new Error("Inventory seed failed");
-        await logAdminAction("inventory.add", created.id ?? created.book_id, {
-          count,
-        });
       }
 
       alert("Book created successfully.");
@@ -259,20 +263,14 @@ function InventoryPanel({ loading, books, onChange }) {
           `${API_BASE}/admin/books/${bookId}/inventory/update`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ count: next }),
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ count: next, admin_user_id: getCurrentAdminId() }),
           }
         );
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.error || "Inventory update failed");
         }
-    
-        await logAdminAction("inventory.set", bookId, {
-          from: current,
-          to: next,
-          delta: next - current,
-        });
     
         await onChange?.();
     
@@ -294,19 +292,13 @@ function InventoryPanel({ loading, books, onChange }) {
     try {
       const res = await fetch(`${API_BASE}/admin/books/${bookId}/unretire`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ admin_user_id: getCurrentAdminId() }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Unretire failed");
       }
-      
-      await logAdminAction("inventory.set", bookId, {
-        from: current,
-        to: next,
-        delta: next - current,
-      });
       
       await onChange?.();
 
@@ -469,14 +461,13 @@ function RetirePanel({ loading, books, onChange }) {
     try {
       const res = await fetch(`${API_BASE}/admin/books/${selectedId}/retire`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: reason.trim() }),
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ reason: reason.trim(), admin_user_id: getCurrentAdminId() }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Retire failed");
       }
-      await logAdminAction("book.retire", selectedId, { reason: reason.trim() });
       alert("Book retired.");
       setSelectedId("");
       setReason("");
@@ -488,6 +479,8 @@ function RetirePanel({ loading, books, onChange }) {
       setBusy(false);
     }
   };
+
+  const disabled = !selectedId || !reason.trim() || busy;
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
@@ -513,7 +506,16 @@ function RetirePanel({ loading, books, onChange }) {
           <button
           id="retire-btn"
             onClick={retire}
-            disabled={!selectedId || !reason.trim() || busy}
+            disabled={disabled}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 10,
+              border: "1px solid transparent",
+              background: disabled ? "#cbd5e1" : "#000054", // 👈 changes color
+              color: "white",
+              fontWeight: 700,
+              cursor: disabled ? "not-allowed" : "pointer",
+            }}
           >
             {busy ? "Retiring…" : "Retire"}
           </button>
